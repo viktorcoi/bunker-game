@@ -35,7 +35,7 @@ const App = () => {
 
     const [test, setTest] = useState<boolean>(true);
 
-    // TODO - реализовать общение с ws по uid
+    // TODO - реализовать общение с ws по uid между сервером и игроком
 
     // useEffect(() => {
     //     connect();
