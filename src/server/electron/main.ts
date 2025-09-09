@@ -27,8 +27,8 @@ const getLocalIP = (): string | null => {
 
 const createWindow = async () => {
     mainWindow = new BrowserWindow({
-        minWidth: 850,
-        minHeight: 550,
+        minWidth: 800,
+        minHeight: 600,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
@@ -71,7 +71,7 @@ const startServer = () => {
                 }
             });
         });
-    });
+    }); 
 
     server.listen(7355, () => {
         console.log(`Server running at http://${getLocalIP()}:7355`);

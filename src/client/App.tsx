@@ -3,6 +3,7 @@ import {createTheme, CssBaseline, GlobalStyles, ThemeProvider} from "@mui/materi
 import SignIn from "./pages/SignIn/SignIn";
 import Room from "./pages/Room";
 import {useClientStore} from "./pages/store/useClientStore";
+import {MUITheme} from "../MUITheme";
 
 const App = () => {
 
@@ -11,27 +12,6 @@ const App = () => {
     const connect = useClientStore((s) => s.ws.connect);
     const disconnect = useClientStore((s) => s.ws.disconnect);
     const subscribe = useClientStore((s) => s.ws.subscribe);
-
-    const darkTheme = createTheme({
-        typography: {
-            fontFamily: [
-                '-apple-system',
-                'BlinkMacSystemFont',
-                'Segoe UI',
-                'Roboto',
-                'Oxygen',
-                'Ubuntu',
-                'Cantarell',
-                'Fira Sans',
-                'Droid Sans',
-                'Helvetica Neue',
-                'sans-serif',
-            ].join(','),
-        },
-        palette: {
-            mode: 'dark',
-        },
-    });
 
     const [test, setTest] = useState<boolean>(true);
 
@@ -116,7 +96,9 @@ const App = () => {
     }, []);
 
     return (
-        <ThemeProvider theme={darkTheme}>
+        <ThemeProvider
+            theme={MUITheme}
+        >
         <CssBaseline />
         <GlobalStyles
             styles={{

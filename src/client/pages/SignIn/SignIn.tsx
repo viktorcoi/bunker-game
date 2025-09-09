@@ -67,7 +67,6 @@ const SignIn = () => {
                             setName(e.target.value);
                         }
                     }}
-                    color={'warning'}
                     fullWidth={true}
                     label="Введите имя"
                 />
@@ -76,7 +75,6 @@ const SignIn = () => {
                     disabled={name.trim().length < 3}
                     onClick={handleSignIn}
                     size={'large'}
-                    color={'warning'}
                     variant="contained"
                 >
                     Войти

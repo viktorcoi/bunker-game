@@ -4,7 +4,17 @@ import {signStatusType} from "../../../types";
 
 export const useServerStore = create<ServerStoreTypes>((set, get) => ({
     ip: '',
-    players: [],
+    players: [
+        // {id: 1, name: 'Сергей Лысый', image: 'sadsa', uid: 'sadsa'},
+        // {id: 2, name: 'Даунич', image: 'sadsa', uid: 'sadsa'},
+        // {id: 3, name: 'Малой', image: 'fd', uid: 'sadsa'},
+        // {id: 4, name: 'Андрюха', image: 'sadsa', uid: 'sadsa'},
+        // {id: 5, name: 'CR 7', image: 'sadsa', uid: 'sadsa'},
+        // {id: 6, name: 'Месси', image: 'sadsa', uid: 'sadsa'},
+        // {id: 7, name: 'Андрес', image: 'fd', uid: 'sadsa'},
+        // {id: 8, name: 'Булочка с маком', image: 'sadsa', uid: 'sadsa'},
+        // {id: 9, name: 'А я самый умный, сделаю оченб длинный ник ыыыыыыыыыы', image: 'sadsa', uid: 'sadsa'},
+    ],
     ws: {
         socket: null,
         connected: false,

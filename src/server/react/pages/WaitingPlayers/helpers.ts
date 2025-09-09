@@ -68,7 +68,7 @@ export const getColorForName = (value: string) => {
 export const getInitialsFromName = (
     userName: string
 ) => {
-    const [firstName, lastName] = userName?.split(' ');
+    const [firstName, lastName] = userName?.toUpperCase()?.split(' ');
     const firstInitial = firstName?.[0] || '';
     const lastInitial = lastName?.[0] || '';
     return `${firstInitial}${lastInitial}`;
