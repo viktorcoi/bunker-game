@@ -1,9 +1,23 @@
 import React, {useEffect, useState} from "react";
-import {createTheme, CssBaseline, GlobalStyles, ThemeProvider} from "@mui/material";
+import {Box, CssBaseline, GlobalStyles, ThemeProvider} from "@mui/material";
 import SignIn from "./pages/SignIn/SignIn";
-import Room from "./pages/Room";
-import {useClientStore} from "./pages/store/useClientStore";
+import {useClientStore} from "./store/useClientStore";
 import {MUITheme} from "../MUITheme";
+import Room from "./pages/Room/Room";
+
+const styles = {
+    global: {
+        html: { height: '100%' },
+        body: { height: '100%' },
+        '#root': { height: '100%' }
+    },
+    container: {
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        p: '15px',
+    }
+};
 
 const App = () => {
 
@@ -96,21 +110,15 @@ const App = () => {
     }, []);
 
     return (
-        <ThemeProvider
-            theme={MUITheme}
-        >
+        <ThemeProvider theme={MUITheme}>
         <CssBaseline />
-        <GlobalStyles
-            styles={{
-                html: { height: '100%' },
-                body: { height: '100%' },
-                '#root': { height: '100%' }
-            }}
-        />
-            {!player.id ? <SignIn/> : (
-                <Room/>
-            )}
+        <GlobalStyles styles={styles.global}/>
+            <Box sx={styles.container}>
 
+                {!player.id ? <SignIn/> : (
+                    <Room/>
+                )}
+            </Box>
         </ThemeProvider>
     )
 };

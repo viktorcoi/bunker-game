@@ -1,14 +1,34 @@
 import {create} from "zustand";
 import {ClientStoreTypes} from "./types";
-import {PlayerType} from "../../../types";
+import {PlayerType} from "../../types";
 import {generateUID} from "./generateUID";
-
 
 const wsUrl = `ws://${window.location.hostname}:7355`;
 
 export const useClientStore = create<ClientStoreTypes>((set, get) => ({
-    player: {uid: generateUID()},
-    players: [],
+    player: {
+        // id: 9999,
+        // name: 'TEST',
+        // image: '',
+        // role: 'host',
+        uid: generateUID()
+    },
+    players: [
+        // {id: 9999,
+        //     name: 'TEST',
+        //     image: '',
+        //     role: 'host',
+        //     uid: generateUID()},
+        // {id: 1, name: 'Сергей Лысый', image: '', uid: 'sadsa', role: 'player'},
+        // {id: 2, name: 'Даунич', image: '', uid: 'sadsa', role: 'player'},
+        // {id: 3, name: 'Малой', image: '', uid: 'sadsa', role: 'player'},
+        // {id: 4, name: 'Андрюха', image: '', uid: 'sadsa', role: 'player'},
+        // {id: 5, name: 'CR 7', image: '', uid: 'sadsa', role: 'player'},
+        // {id: 6, name: 'Месси', image: '', uid: 'sadsa', role: 'player'},
+        // {id: 7, name: 'Андрес', image: '', uid: 'sadsa', role: 'player'},
+        // {id: 8, name: 'Булочка с маком', image: '', uid: 'sadsa', role: 'player'},
+        // {id: 9, name: 'А я самый умный, сделаю оченб длинный ник ыыыыыыыыыы', image: '', uid: 'sadsa', role: 'player'},
+    ],
     ws: {
         socket: null,
         connected: false,
@@ -34,8 +54,6 @@ export const useClientStore = create<ClientStoreTypes>((set, get) => ({
                 set((state) => ({
                     ws: { ...state.ws, connected: true }
                 }));
-
-                alert('ОДКЛБЮЧЕН')
             };
 
             ws.onmessage = async (event) => {

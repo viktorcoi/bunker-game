@@ -1,4 +1,4 @@
-import React, {useMemo, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {
     Autocomplete,
     Box, Button, Checkbox, FormControlLabel, TextField, Typography
@@ -66,6 +66,12 @@ const SettingsGame = () => {
 
     const hostRef = useRef<HTMLInputElement>(null);
 
+    useEffect(() => {
+        const findHost = players.find((player) => player.role === 'host');
+
+        if (findHost.id) setHost({id: findHost.id, label: findHost.name});
+    }, []);
+
     const playersOptions = useMemo(() => {
         return players.map((player) => ({
             id: player.id,
@@ -84,6 +90,7 @@ const SettingsGame = () => {
                         e.stopPropagation();
                         hostRef.current?.blur();
                     }}
+                    isOptionEqualToValue={(option, value) => option.id === value.id}
                     noOptionsText="Игроков не найдено"
                     onChange={(_, newValue) => {
                         hostRef.current?.blur();

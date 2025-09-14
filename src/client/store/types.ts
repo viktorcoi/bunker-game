@@ -1,4 +1,4 @@
-import {PlayerType, WSType} from "../../../types";
+import {PlayerType, WSType} from "../../types";
 
 interface WSClientType extends WSType {
     send: {

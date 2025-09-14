@@ -5,15 +5,15 @@ import {signStatusType} from "../../../types";
 export const useServerStore = create<ServerStoreTypes>((set, get) => ({
     ip: '',
     players: [
-        // {id: 1, name: 'Сергей Лысый', image: 'sadsa', uid: 'sadsa'},
-        // {id: 2, name: 'Даунич', image: 'sadsa', uid: 'sadsa'},
-        // {id: 3, name: 'Малой', image: 'fd', uid: 'sadsa'},
-        // {id: 4, name: 'Андрюха', image: 'sadsa', uid: 'sadsa'},
-        // {id: 5, name: 'CR 7', image: 'sadsa', uid: 'sadsa'},
-        // {id: 6, name: 'Месси', image: 'sadsa', uid: 'sadsa'},
-        // {id: 7, name: 'Андрес', image: 'fd', uid: 'sadsa'},
-        // {id: 8, name: 'Булочка с маком', image: 'sadsa', uid: 'sadsa'},
-        // {id: 9, name: 'А я самый умный, сделаю оченб длинный ник ыыыыыыыыыы', image: 'sadsa', uid: 'sadsa'},
+        {id: 1, name: 'Сергей Лысый', image: '', uid: 'sadsa', role: 'host'},
+        {id: 2, name: 'Даунич', image: '', uid: 'sadsa', role: 'player'},
+        {id: 3, name: 'Малой', image: '', uid: 'sadsa', role: 'player'},
+        {id: 4, name: 'Андрюха', image: '', uid: 'sadsa', role: 'player'},
+        {id: 5, name: 'CR 7', image: '', uid: 'sadsa', role: 'player'},
+        {id: 6, name: 'Месси', image: '', uid: 'sadsa', role: 'player'},
+        {id: 7, name: 'Андрес', image: '', uid: 'sadsa', role: 'player'},
+        {id: 8, name: 'Булочка с маком', image: '', uid: 'sadsa', role: 'player'},
+        {id: 9, name: 'А я самый умный, сделаю оченб длинный ник ыыыыыыыыыы', image: '', uid: 'sadsa', role: 'player'},
     ],
     ws: {
         socket: null,
@@ -30,9 +30,10 @@ export const useServerStore = create<ServerStoreTypes>((set, get) => ({
             players: () => {
                 get().ws.send.message(
                     'players',
-                    get().players.map(({id, name, image}) => (
-                        {id, name, image}
-                    ))
+                    get().players.map(player => {
+                        const {uid, ...rest} = player;
+                        return rest;
+                    })
                 );
             },
             signStatus: (uid, data) => {
@@ -83,6 +84,7 @@ export const useServerStore = create<ServerStoreTypes>((set, get) => ({
                                 name: parsed.signIn.name,
                                 image: parsed.signIn.image || "",
                                 uid: parsed.signIn.uid,
+                                role: newId === 1 ? 'host' : 'player'
                             }
                         }
 
