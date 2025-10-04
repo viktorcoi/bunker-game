@@ -3,6 +3,7 @@ import {Avatar, Box, Button, TextField} from "@mui/material";
 import {useClientStore} from "../../store/useClientStore";
 import {getColorForName, getInitialsFromName} from "../../../helpers/getAvatarInfo";
 import {CircularProgress} from "@mui/material";
+import axios from "axios";
 
 const styles = {
     wrapper: {
@@ -27,85 +28,80 @@ const styles = {
     },
 };
 
+
 const SignIn = () => {
 
     const updatePlayer = useClientStore((s) => s.updatePlayer);
     const uid = useClientStore((s) => s.player.uid);
-    const singIn = useClientStore((s) => s.ws.send.singIn);
-    const subscribe = useClientStore((s) => s.ws.subscribe);
+    const login = useClientStore((s) => s.login);
+    const connectionId = useClientStore((s) => s.connectionId);
 
     const [name, setName] = React.useState("");
     const [image, setImage] = React.useState("");
     const [loading, setLoading] = React.useState(false);
-    const [statusAuth, setStatusAuth] = useState<any>(null);
+    const [statusAuth, setStatusAuth] = useState<{ status: 'success' | 'error', error?: string } | null>(null);
     const [imageLoading, setImageLoading] = React.useState(false);
 
-    useEffect(() => {
-        const unsubscribe = subscribe(uid, (data) => {
-            console.log(data)
-            setStatusAuth(data);
-        });
+    // useEffect(() => { // No longer needed as login handles status directly
+    //     const unsubscribe = subscribe(uid, (data) => {
+    //         console.log(data)
+    //         setStatusAuth(data);
+    //     });
+    //
+    //     return () => unsubscribe();
+    // }, [uid]);
 
-        return () => unsubscribe();
-    }, [uid]);
+    // useEffect(() => { // Combined with handleSignIn
+    //     if (!statusAuth) return;
+    //
+    //     setLoading(false);
+    //     if (statusAuth.status === 'success') {
+    //         updatePlayer(statusAuth.player);
+    //     }
+    // }, [statusAuth]);
 
-    useEffect(() => {
-        if (!statusAuth) return;
-
-        setLoading(false);
-        if (statusAuth.status === 'success') {
-            updatePlayer(statusAuth.player);
+    const handleSignIn = async () => {
+        if (!connectionId) {
+            setStatusAuth({ status: 'error', error: 'No WebSocket connection. Please refresh.' });
+            return;
         }
-    }, [statusAuth]);
-
-    const handleSignIn = () => {
-        singIn({uid, name, image});
         setLoading(true);
-        setStatusAuth(null)
+        setStatusAuth(null);
+        const result = await login(name, image, uid, connectionId);
+        if (result.status === 'error') {
+            setStatusAuth({ status: 'error', error: result.error });
+        }
+        setLoading(false);
     }
 
-    const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
             setImageLoading(true);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    canvas.width = 256;
-                    canvas.height = 256;
-                    const aspectRatio = img.width / img.height;
-                    let sx, sy, sWidth, sHeight;
 
-                    if (aspectRatio > 1) {
-                        sHeight = img.height;
-                        sWidth = img.height;
-                        sx = (img.width - sWidth) / 2;
-                        sy = 0;
-                    } else {
-                        sWidth = img.width;
-                        sHeight = img.width;
-                        sx = 0;
-                        sy = (img.height - sHeight) / 2;
-                    }
+            const formData = new FormData();
+            formData.append('avatar', file);
+            formData.append('uid', 'uid-23');
 
-                    ctx?.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, 256, 256);
-                    setImage(canvas.toDataURL('image/webp', .8));
-                    setImageLoading(false);
-                };
-                img.src = reader.result as string;
-            };
-            reader.readAsDataURL(file);
+            await axios.post(`http://${window.location.hostname}:7355/upload-avatar`,
+                formData
+            ).then((res) => {
+
+            }).catch(e => {
+                setStatusAuth({ status: 'error', error: e.message || 'Image upload failed' });
+            }).finally(() => {
+                setImageLoading(false);
+            })
         }
     };
+
+    const dev = process.env.NODE_ENV === 'development';
 
     return (
         <Box sx={styles.wrapper}>
             <Box sx={styles.form}>
                 <Avatar
-                    src={image}
+                    src={dev ? `http://192.168.0.104:7355${image}` : image}
                     sx={{
                         ...styles.avatar,
                         background: image ? undefined : getColorForName(name),
@@ -130,8 +126,9 @@ const SignIn = () => {
                         variant="outlined"
                         component="label"
                         htmlFor="avatar-upload"
+                        disabled={imageLoading}
                     >
-                        Загрузить аватар
+                        {imageLoading ? <CircularProgress size={24}/> : "Загрузить аватар"}
                     </Button>
                 </>
                 <TextField
@@ -150,12 +147,12 @@ const SignIn = () => {
                 <Button
                     fullWidth={true}
                     loading={loading}
-                    disabled={name.trim().length < 3}
+                    disabled={name.trim().length < 3 || loading || !connectionId}
                     onClick={handleSignIn}
                     size={'large'}
                     variant="contained"
                 >
-                    Войти
+                    {loading ? <CircularProgress size={24}/> : "Войти"}
                 </Button>
             </Box>
         </Box>

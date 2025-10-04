@@ -22,92 +22,48 @@ const styles = {
 const App = () => {
 
     const player = useClientStore((s) => s.player);
-    const updatePlayers = useClientStore((s) => s.updatePlayers);
     const connect = useClientStore((s) => s.ws.connect);
     const disconnect = useClientStore((s) => s.ws.disconnect);
     const subscribe = useClientStore((s) => s.ws.subscribe);
-
-    const [test, setTest] = useState<boolean>(true);
-
-    // TODO - реализовать общение с ws по uid между сервером и игроком
-
-    // useEffect(() => {
-    //     connect();
-    //
-    //     const unsubscribe = subscribe("players", (data) => {
-    //         if (data === "get") return;
-    //         updatePlayers(data);
-    //     });
-    //
-    //     return () => {
-    //         disconnect();
-    //         unsubscribe();
-    //     };
-    // }, []);
-    //
-    // useEffect(() => {
-    //     const handler = () => {
-    //         if (document.visibilityState === "visible") {
-    //             const { ws, player } = useClientStore.getState();
-    //
-    //             if (!ws.socket || ws.socket.readyState !== WebSocket.OPEN) {
-    //                 console.log("🔄 Reconnecting...");
-    //                 ws.connect();
-    //
-    //                 // ждем успешного открытия сокета и шлём sync
-    //                 const unsub = ws.subscribe("connected", () => {
-    //                     if (player?.uid) {
-    //                         ws.send("players", "get");
-    //                     }
-    //                     unsub();
-    //                 });
-    //             } else if (player?.uid) {
-    //                 console.log("🔄 Requesting sync for", player.uid);
-    //                 ws.send("players", "get");
-    //             }
-    //         }
-    //     };
-    //
-    //     document.addEventListener("visibilitychange", handler);
-    //     return () => document.removeEventListener("visibilitychange", handler);
-    // }, []);
+    const uid = useClientStore((s) => s.player.uid);
+    const connectionId = useClientStore((s) => s.connectionId);
 
     useEffect(() => {
-        if (!test) return;
-
-        setTest(false);
-
         connect();
 
-        const unsubscribe = subscribe('players', (data) => {
-            if (data === 'get') return;
-            updatePlayers(data);
+        // Subscribe to playerState updates
+        const unsubscribePlayers = subscribe('playerState', (players) => {
+            // The updatePlayers logic is now handled directly in useClientStore.ts
+            // So this subscription mainly serves to trigger re-renders if needed.
+            console.log('Received player state update:', players);
         });
 
         return () => {
-            if (test) return;
             disconnect();
-            unsubscribe();
-        }
-    }, [test]);
+            unsubscribePlayers();
+        };
+    }, []);
 
     useEffect(() => {
         const handler = () => {
             if (document.visibilityState === "visible") {
-                const { ws, player } = useClientStore.getState();
+                const { ws, player, connectionId } = useClientStore.getState();
 
                 if (!ws.socket || ws.socket.readyState !== WebSocket.OPEN) {
-                    setTest(true)
-                } else if (player?.uid) {
-                    console.log("🔄 Requesting sync for", player.uid);
-                    ws.send.message("players", 'get');
+                    console.log("🔄 Reconnecting WebSocket...");
+                    ws.connect();
+                } else if (player?.id && connectionId) {
+                    // If player is logged in and WS is connected, ensure server knows about this connection
+                    // This might involve re-sending login data or a 'reconnect' message if needed.
+                    // For now, the existing login flow in SignIn.tsx will handle re-associating WS on login.
+                    console.log("WebSocket already open and player logged in.");
                 }
             }
         };
 
         document.addEventListener("visibilitychange", handler);
         return () => document.removeEventListener("visibilitychange", handler);
-    }, []);
+    }, [uid, connectionId]);
 
     return (
         <ThemeProvider theme={MUITheme}>

@@ -9,6 +9,7 @@ module.exports = {
     entry: './src/server/electron/main.ts',
     target: 'electron-main',
     devtool: 'source-map',
+    node: {__dirname: false, __filename: false},
     module: {
         rules: [
             {
@@ -21,6 +22,11 @@ module.exports = {
     output: {
         path: path.resolve(__dirname, '../build/server/electron'),
         filename: '[name].js',
+    },
+    externals: {
+        'sharp': 'commonjs sharp',
+        '@img/sharp-libvips-dev': 'commonjs @img/sharp-libvips-dev',
+        '@img/sharp-wasm32': 'commonjs @img/sharp-wasm32',
     },
     plugins: [
         new CopyWebpackPlugin({

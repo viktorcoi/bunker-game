@@ -16,6 +16,17 @@ export type PlayerType = {
     image: string;
     uid: string;
     role: 'player' | 'host';
+    ws: any; // Using any for now, will replace with WebSocket from 'ws' in server main.ts
+};
+
+export type Avatar = {
+    url: string;
+    // Potentially add more avatar-related fields here like 'thumbnailUrl' if needed
+};
+
+export type ServerState = {
+    players: PlayerType[];
+    // Add other server-side state here as needed
 };
 
 export type signStatusType = {

@@ -4,31 +4,14 @@ import {PlayerType} from "../../types";
 import {generateUID} from "./generateUID";
 
 const wsUrl = `ws://${window.location.hostname}:7355`;
+const apiUrl = `http://${window.location.hostname}:7355`;
 
 export const useClientStore = create<ClientStoreTypes>((set, get) => ({
-    player: {
-        // id: 9999,
-        // name: 'TEST',
-        // image: '',
-        // role: 'host',
-        uid: generateUID()
-    },
+    player: JSON.parse(localStorage.getItem('player') || '{}') || {uid: generateUID()},
     players: [
-        // {id: 9999,
-        //     name: 'TEST',
-        //     image: '',
-        //     role: 'host',
-        //     uid: generateUID()},
-        // {id: 1, name: 'Сергей Лысый', image: '', uid: 'sadsa', role: 'player'},
-        // {id: 2, name: 'Даунич', image: '', uid: 'sadsa', role: 'player'},
-        // {id: 3, name: 'Малой', image: '', uid: 'sadsa', role: 'player'},
-        // {id: 4, name: 'Андрюха', image: '', uid: 'sadsa', role: 'player'},
-        // {id: 5, name: 'CR 7', image: '', uid: 'sadsa', role: 'player'},
-        // {id: 6, name: 'Месси', image: '', uid: 'sadsa', role: 'player'},
-        // {id: 7, name: 'Андрес', image: '', uid: 'sadsa', role: 'player'},
-        // {id: 8, name: 'Булочка с маком', image: '', uid: 'sadsa', role: 'player'},
-        // {id: 9, name: 'А я самый умный, сделаю оченб длинный ник ыыыыыыыыыы', image: '', uid: 'sadsa', role: 'player'},
     ],
+    connectionId: null,
+    setConnectionId: (id: string) => set(() => ({ connectionId: id})),
     ws: {
         socket: null,
         connected: false,
@@ -41,9 +24,9 @@ export const useClientStore = create<ClientStoreTypes>((set, get) => ({
                     ws.send(JSON.stringify({ [key]: value }));
                 }
             },
-            singIn: (player) => {
-                get().ws.send.message('signIn', player);
-            }
+            // singIn: (player) => { // This will be removed and replaced by login action
+            //     get().ws.send.message('signIn', player);
+            // }
         },
         connect: () => {
             if (get().ws.socket) return;
@@ -62,9 +45,19 @@ export const useClientStore = create<ClientStoreTypes>((set, get) => ({
                 try {
                     const parsed = JSON.parse(data);
 
+                    if (parsed.type === 'connectionId') {
+                        get().setConnectionId(parsed.payload);
+                        return;
+                    }
+
                     set((state) => ({
                         ws: { ...state.ws, messages: [...state.ws.messages, parsed] }
                     }));
+
+                    if (parsed.type === 'playerState') {
+                        get().updatePlayers(parsed.payload);
+                        return;
+                    }
 
                     Object.keys(parsed).forEach((key) => {
                         const subs = get().ws._subscribers[key];
@@ -106,8 +99,7 @@ export const useClientStore = create<ClientStoreTypes>((set, get) => ({
                 if (subs[key]) {
                     subs[key] = subs[key].filter(cb => cb !== callback);
                     set((state) => ({
-                        ws: {
-                            ...state.ws,
+                        ws: { ...state.ws,
                             _subscribers: { ...subs }
                         }
                     }));
@@ -127,5 +119,48 @@ export const useClientStore = create<ClientStoreTypes>((set, get) => ({
     updatePlayer: (player: PlayerType) => {
         set(() => ({player}));
         localStorage.setItem('player', JSON.stringify(player));
-    }
+    },
+    login: async (name: string, image: string, uid: string, connectionId: string) => {
+        try {
+            const response = await fetch(`${apiUrl}/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name, image, uid, connectionId }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Login failed');
+            }
+
+            const player = await response.json();
+            get().updatePlayer(player);
+            return { status: 'success', player };
+        } catch (error: any) {
+            console.error('Login error:', error);
+            return { status: 'error', error: error.message };
+        }
+    },
+    logout: async (playerId: number) => {
+        try {
+            const response = await fetch(`${apiUrl}/players/${playerId}`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Logout failed');
+            }
+
+            set(() => ({ player: { uid: generateUID() }, players: [] })); // Clear player state
+            localStorage.removeItem('player');
+            get().ws.disconnect(); // Disconnect WebSocket
+            return { status: 'success' };
+        } catch (error: any) {
+            console.error('Logout error:', error);
+            return { status: 'error', error: error.message };
+        }
+    },
 }));

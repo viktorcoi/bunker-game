@@ -3,13 +3,16 @@ import * as path from 'path';
 import * as url from 'url';
 import express from "express";
 import http from "http";
-import { WebSocketServer } from "ws";
 import os from "os";
+import authRouter from '../api/auth';
+import playersRouter from '../api/players';
+import { wsHandler } from '../ws/wsHandler'; // Import the wsHandler instance
+import cors from 'cors';
 
 const isDev = process.env.NODE_ENV === 'development';
 let mainWindow: BrowserWindow | null = null;
 let server: http.Server | null = null;
-let wss: WebSocketServer | null = null;
+// let wss: WebSocketServer | null = null; // No longer needed here, moved to WsHandler
 
 const getLocalIP = (): string | null => {
     const interfaces = os.networkInterfaces();
@@ -56,22 +59,23 @@ const createWindow = async () => {
 
 const startServer = () => {
     const appExpress = express();
+    appExpress.use(express.json()); // Enable JSON body parsing
+    appExpress.use(cors()); // Enable CORS for all routes
+
+    // Mount API routers
+    appExpress.use(authRouter);
+    appExpress.use(playersRouter);
+
+    const uploadDir = path.join(process.cwd(), 'build', 'uploads'); // Corrected path to build/uploads
+    appExpress.use('/uploads', express.static(uploadDir));
+
     if (!isDev) {
         appExpress.use(express.static(path.join(__dirname, "../../client")));
     }
     server = http.createServer(appExpress);
 
-    wss = new WebSocketServer({ server });
-
-    wss.on("connection", (ws) => {
-        ws.on("message", (message) => {
-            wss?.clients.forEach((client) => {
-                if (client.readyState === ws.OPEN) {
-                    client.send(message);
-                }
-            });
-        });
-    }); 
+    // Initialize WebSocket server
+    wsHandler.init(server);
 
     server.listen(7355, () => {
         console.log(`Server running at http://${getLocalIP()}:7355`);
